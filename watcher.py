@@ -91,7 +91,7 @@ def verify_growth_last_row(plate_info, plate_data):
 
 
 # --- File Processing Logic ---
-def process_csv_file(file_path):
+def process_csv_file(file_path, process_name):
     """
     Process the newly modified file.
     :param file_path: Path to the modified file.
@@ -109,7 +109,7 @@ def process_csv_file(file_path):
         if time_of_growth: # If a valid time is returned
             '''Create a worklist for Momentum XML'''
             print(f"\n--- Create new XML worklist ---")
-            momentum_xml.create(plate_data, plate_info)
+            momentum_xml.create(plate_data, plate_info, process_name)
 
     except FileNotFoundError:
         print(f"Error: File not found at {file_path}. It might have been moved or deleted quickly.")
@@ -124,9 +124,10 @@ class NewFileHandler(FileSystemEventHandler):
     """
     Custom event handler for watchdog to detect file creation events.
     """
-    def __init__(self, watched_file):
+    def __init__(self, watched_file, process_name):
         super().__init__()
         self.watched_file = watched_file
+        self.process_name = process_name
 
     def on_created(self, event):
         """
@@ -138,7 +139,7 @@ class NewFileHandler(FileSystemEventHandler):
         if not event.is_directory and event_file_normalized == watched_file_normalized:  # Ensure it's the specific file
             file_extension = os.path.splitext(self.watched_file)[1].lower()
             if FILE_EXTENSIONS is None or file_extension in [ext.lower() for ext in FILE_EXTENSIONS]:
-                process_csv_file(event.src_path)
+                process_csv_file(event.src_path, self.process_name)
 
     def on_modified(self, event):
         """
@@ -148,11 +149,11 @@ class NewFileHandler(FileSystemEventHandler):
         event_file_normalized = os.path.abspath(event.src_path)
 
         if not event.is_directory and event_file_normalized == watched_file_normalized:
-            process_csv_file(event.src_path)
+            process_csv_file(event.src_path, self.process_name)
 
 
 # --- Main Script Execution ---
-def start_watching(watched_file):
+def start_watching(watched_file, process_name):
     """
     Start watching the specified folder for new files.
     :param watched_file: The watch file is pass by the user in the main function.
@@ -161,7 +162,7 @@ def start_watching(watched_file):
     # Extract the parent directory of the file
     parent_dir = os.path.dirname(watched_file)
 
-    event_handler = NewFileHandler(watched_file)
+    event_handler = NewFileHandler(watched_file, process_name)
     observer = Observer()
     observer.schedule(event_handler, parent_dir, recursive=False) # Set recursive=True to watch subdirectories
 

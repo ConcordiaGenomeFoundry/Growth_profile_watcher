@@ -83,15 +83,15 @@ def process_plate(workunit: ET.Element, process: str, **kwargs: Dict[str, Any]) 
     return batch
 
 
-def write_file(workunit: ET.Element, **kwargs: Dict[str, Any]) -> ET.Element:
+def write_file(workunit: ET.Element, process_name:str, **kwargs: Dict[str, Any]) -> ET.Element:
     usable_kwargs = ['barcode', 'step', 'FileName', 'FileContents', 'priority', 'iterations', 'minimumDelay']
     kwargs = {key: kwargs[key] for key in kwargs if key in usable_kwargs}
     # Using 'Induction' as the process name
-    batch = process_plate(workunit, 'Test_GP_watcher', **kwargs)
+    batch = process_plate(workunit, process_name, **kwargs)
     return batch
 
 
-def create(plate_data, plate_info):
+def create(plate_data, plate_info, process_name):
     """
     Create an XML structure for Momentum.
     :param plate_data: List of dictionaries containing plate growth data.
@@ -112,7 +112,7 @@ def create(plate_data, plate_info):
 
     # Initialize the workunit
     workunit = initialize_workunit(worklist,
-                                   name='Induction-Workunit',
+                                   name='Workunit',
                                    append='false',
                                    auto_load='true',
                                    auto_verify_load='true',
@@ -128,7 +128,7 @@ def create(plate_data, plate_info):
     }
 
     for step, process in enumerate(protocol, start=1):
-        batches.append(process(workunit, step=str(step), **kwargs))
+        batches.append(process(workunit, process_name=process_name, step=str(step), **kwargs))
     tree = ET.ElementTree(worklist)
     ET.indent(tree, space=" ", level=0)  # For pretty printing
 
@@ -136,6 +136,10 @@ def create(plate_data, plate_info):
     xml_str = ET.tostring(worklist, encoding='unicode', method='xml')
 
     ### --- Path to save the XML file --- ###
-    xml_path = f'{barcode}.xml'
-    with open(os.path.join(MOMENTUM_ROOT_PATH, xml_path), "w") as f:
-        f.write(xml_str)
+    try:
+        xml_path = f'{barcode}.xml'
+        with open(os.path.join(MOMENTUM_ROOT_PATH, xml_path), "w") as f:
+            f.write(xml_str)
+
+    except Exception as e:
+        print(f"Error saving XML file: {e}")
