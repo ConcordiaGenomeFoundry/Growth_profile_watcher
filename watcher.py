@@ -57,41 +57,39 @@ def extract_csv_plate_info_growth(csv_path):
         return plate_info, plate_data
 
 
-def verify_growth_last_row(plate_info, plate_data):
+def verify_growth_last_row(plate_info, plate_data, threshold):
     """
-    Verify if at least 50% of wells growth data is higher than 1 and return the time when it happened.
+    Verify if a percentage of wells (threshold) growth data is higher than saturation_OD and return the time
+    when it happened.
     :param plate_info: Dictionary containing plate information such as plate_id, plate_type, num_rows, and num_columns.
     :param plate_data: List of dictionaries containing time and wells growth data.
-    :return: Time when at least 50% of wells growth data is higher than 1, or None if not found.
+    :param threshold: Percentage threshold (e.g., 0.7 for 70%).
+    :return: Time when the threshold is met, or None if not met.
     """
     # Extract plate information
     num_columns = plate_info[0]['num_columns']
     num_rows = plate_info[0]['num_rows']
     plate_id = plate_info[0]['plate_id']
     plate_type = plate_info[0]['plate_type']
-
-    # Threshold will be defined by Momentum user interface
-    #TODO: Get variable from Momentum
-    # threshold = momentum.GetVar("Threshold")
-    threshold = (num_rows * num_columns) / 2
+    saturation_OD = 3  # Define saturation OD value
 
     # Check the last entry in plate_data
     entry = plate_data[-1]  # Access the last entry
     wells_growth = entry['wells_growth']
-    count_above_one = sum(1 for value in wells_growth if float(value) > 1)
-    print(f"Count of wells with growth > 1 at time {entry['time']}: {count_above_one}")
+    count_well_OD_above_saturation = sum(1 for value in wells_growth if float(value) >= saturation_OD)
+    print(f"Count of wells with growth > {saturation_OD} at time {entry['time']}: {count_well_OD_above_saturation}")
 
-    if count_above_one >= threshold:
+    if count_well_OD_above_saturation >= (num_rows*num_columns)*threshold:
         print(
-            f"Time: {entry['time']}, Count above 1: {count_above_one}, Threshold: {threshold} at {plate_id} ({plate_type})")
+            f"Time: {entry['time']}, Total of well OD above {saturation_OD}: {count_well_OD_above_saturation}, Threshold: {threshold*100} at {plate_id} ({plate_type})")
         return entry['time']
 
-    print("No time found where at least 50% of wells growth data is higher than 1.")
+    print(f"No time found where at least {threshold*100} of wells growth data is higher than {saturation_OD}.")
     return None
 
 
 # --- File Processing Logic ---
-def process_csv_file(file_path, process_name):
+def process_csv_file(file_path, process_name, threshold):
     """
     Process the newly modified file.
     :param file_path: Path to the modified file.
@@ -102,7 +100,7 @@ def process_csv_file(file_path, process_name):
         plate_info, plate_data = extract_csv_plate_info_growth(file_path)
 
         # Verify wells growth
-        time_of_growth = verify_growth_last_row(plate_info, plate_data)
+        time_of_growth = verify_growth_last_row(plate_info, plate_data, threshold)
 
         print(f"Successfully processed: {file_path}")
 
@@ -128,6 +126,7 @@ class NewFileHandler(FileSystemEventHandler):
         super().__init__()
         self.watched_file = watched_file
         self.process_name = process_name
+        self.threshold = 0.7 # Example threshold value
 
     def on_created(self, event):
         """
@@ -139,7 +138,7 @@ class NewFileHandler(FileSystemEventHandler):
         if not event.is_directory and event_file_normalized == watched_file_normalized:  # Ensure it's the specific file
             file_extension = os.path.splitext(self.watched_file)[1].lower()
             if FILE_EXTENSIONS is None or file_extension in [ext.lower() for ext in FILE_EXTENSIONS]:
-                process_csv_file(event.src_path, self.process_name)
+                process_csv_file(event.src_path, self.process_name, self.threshold)
 
     def on_modified(self, event):
         """
@@ -149,7 +148,7 @@ class NewFileHandler(FileSystemEventHandler):
         event_file_normalized = os.path.abspath(event.src_path)
 
         if not event.is_directory and event_file_normalized == watched_file_normalized:
-            process_csv_file(event.src_path, self.process_name)
+            process_csv_file(event.src_path, self.process_name, self.threshold)
 
 
 # --- Main Script Execution ---
