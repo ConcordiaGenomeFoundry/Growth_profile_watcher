@@ -3,6 +3,10 @@ from typing import Dict, Any, List
 import datetime, os
 from pathlib import PureWindowsPath
 
+# Global path to save the XML files
+MOMENTUM_ROOT_PATH = PureWindowsPath('C:\\WorklistWatcher\\')
+# MOMENTUM_ROOT_PATH = ('/Users/flavia/PycharmProjects/growth_profile_watcher/output/') #used for testing
+
 
 def initialize_workunit(worklist, name, append, auto_load, auto_verify_load, auto_unload, auto_verify_unload):
     """
@@ -36,6 +40,7 @@ def create_batch(parent: ET.Element, process: str, name: str, priority: str, ite
 
 
 def create_variable(parent: ET.Element, var_type: str, name: str, value: str) -> None:
+    # batch, 'String', 'Barcode', barcode
     variable = ET.SubElement(parent, 'variable', {
         'type': var_type,
         'name': name
@@ -64,6 +69,9 @@ def process_plate(workunit: ET.Element, process: str, **kwargs: Dict[str, Any]) 
     barcode = kwargs.get('barcode')
     step = kwargs.get('step')
     plate_type = kwargs.get('plate_type')
+    dispense_file_sample = kwargs.get('FileNameSample')
+    dispense_file_media = kwargs.get('FileNameMedia')
+
     priority = kwargs.get('priority', '10')
     iterations = kwargs.get('iterations', '1')
     minimumDelay = kwargs.get('minimumDelay', '0')
@@ -77,21 +85,25 @@ def process_plate(workunit: ET.Element, process: str, **kwargs: Dict[str, Any]) 
 
     batch = create_batch(workunit, process, f'{barcode}-{step}', priority, iterations, minimumDelay, reference, start_condition)
     if barcode:
-        create_variable(batch, 'String', 'Barcode', barcode)
+        main_barcode = barcode.split("_")[0]
+        create_variable(batch, 'String', 'Barcode_Test', main_barcode+'_Test')
+        create_variable(batch, 'String', 'Barcode_Control', main_barcode+'_Control')
+        create_variable(batch, 'String', 'FileNameSample', dispense_file_sample)
+        create_variable(batch, 'String', 'FileNameMedia', dispense_file_media)
     if plate_type:
         create_variable(batch, 'String', 'Plate_Type', plate_type)
     return batch
 
 
 def write_file(workunit: ET.Element, process_name:str, **kwargs: Dict[str, Any]) -> ET.Element:
-    usable_kwargs = ['barcode', 'step', 'FileName', 'FileContents', 'priority', 'iterations', 'minimumDelay']
+    usable_kwargs = ['barcode', 'step', 'FileName', 'FileNameSample', 'FileNameMedia', 'FileContents', 'priority', 'iterations', 'minimumDelay']
     kwargs = {key: kwargs[key] for key in kwargs if key in usable_kwargs}
     # Using 'Induction' as the process name
     batch = process_plate(workunit, process_name, **kwargs)
     return batch
 
 
-def create(plate_data, plate_info, process_name):
+def create(plate_data, plate_info, process_name, dispense_file_sample, dispense_file_media):
     """
     Create an XML structure for Momentum.
     :param plate_data: List of dictionaries containing plate growth data.
@@ -101,8 +113,6 @@ def create(plate_data, plate_info, process_name):
     """
     worklist = ET.Element("worklist")
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    MOMENTUM_ROOT_PATH = PureWindowsPath('C:\\WorklistWatcher\\')
-    # MOMENTUM_ROOT_PATH = ('/Users/flavia/PycharmProjects/growth_profile_watcher/output/')
     protocol = [write_file]
 
     # Get the integer from plate_info plare_type
@@ -125,6 +135,8 @@ def create(plate_data, plate_info, process_name):
         'barcode': barcode,
         'plate_size': plate_size,
         'plate_type': plate_type,
+        'FileNameSample': dispense_file_sample,
+        'FileNameMedia': dispense_file_media,
     }
 
     for step, process in enumerate(protocol, start=1):

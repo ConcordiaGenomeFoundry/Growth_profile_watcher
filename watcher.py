@@ -3,10 +3,9 @@ import os
 import sys
 import csv
 import momentum_xml
+import lynx_csv
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-# sys.path.append('C:\\Program Files\\Thermo Scientific\\Momentum\\Devices\\')
-# import Momentum as momentum
 
 # File extensions to process. Set to None or empty list to process all files.
 FILE_EXTENSIONS = ['.csv']
@@ -48,11 +47,11 @@ def extract_csv_plate_info_growth(csv_path):
             plate_data.append({"time": time, "wells_growth": wells})
 
         # Print extracted information
-        print(f"Number of Columns: {num_columns}")
-        print(f"Number of Rows: {num_rows}")
-        print(f"Plate Type: {plate_type}")
-        print(f"Plate ID: {plate_id}")
-        print(f"Plate Data: {plate_data[:1]}")
+        # print(f"Number of Columns: {num_columns}")
+        # print(f"Number of Rows: {num_rows}")
+        # print(f"Plate Type: {plate_type}")
+        # print(f"Plate ID: {plate_id}")
+        # print(f"Plate Data: {plate_data[-1]}")
 
         return plate_info, plate_data
 
@@ -106,8 +105,10 @@ def process_csv_file(file_path, process_name, threshold):
 
         if time_of_growth: # If a valid time is returned
             '''Create a worklist for Momentum XML'''
-            print(f"\n--- Create new XML worklist ---")
-            momentum_xml.create(plate_data, plate_info, process_name)
+            print(f"\n--- Create CSV Dispense list for Lynx ---")
+            dispense_file_sample, dispense_file_media = lynx_csv.create(plate_data, plate_info, process_name)
+            print(f"\n--- Create XML worklist for Momentum ---")
+            momentum_xml.create(plate_data, plate_info, process_name, dispense_file_sample, dispense_file_media)
 
     except FileNotFoundError:
         print(f"Error: File not found at {file_path}. It might have been moved or deleted quickly.")

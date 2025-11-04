@@ -3,6 +3,7 @@ import sys
 import watcher
 import argparse
 from pathlib import Path
+DEBUG = True
 
 
 def main():
