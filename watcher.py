@@ -105,17 +105,19 @@ def process_csv_file(file_path, process_name, threshold):
 
         if time_of_growth: # If a valid time is returned
             '''Create a worklist for Momentum XML'''
+
             print(f"\n--- Create CSV Dispense list for Lynx ---")
-            dispense_file_sample, dispense_file_media = lynx_csv.create(plate_data, plate_info, process_name)
+            dispense_filename_sample, dispense_filename_media = lynx_csv.create(plate_data, plate_info, process_name)
+
             print(f"\n--- Create XML worklist for Momentum ---")
-            momentum_xml.create(plate_data, plate_info, process_name, dispense_file_sample, dispense_file_media)
+            momentum_xml.create(plate_data, plate_info, process_name, dispense_filename_sample, dispense_filename_media)
 
     except FileNotFoundError:
         print(f"Error: File not found at {file_path}. It might have been moved or deleted quickly.")
     except Exception as e:
         print(f"An error occurred while processing {file_path}: {e}")
     finally:
-        print(f"--- Finished processing: {file_path} ---\n")
+        print(f"\n--- Finished processing: {file_path} ---\n")
 
 
 # --- Watchdog Event Handler ---

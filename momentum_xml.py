@@ -65,8 +65,7 @@ def process_plate(workunit: ET.Element, process: str, **kwargs: Dict[str, Any]) 
     minimumDelay -- The minimum delay (str, default '0').
     ODTC_protocol -- The pathname for the ODTC process (str, optional).
     """
-
-    barcode = kwargs.get('barcode')
+    barcode = kwargs.get('Plate_Barcode')
     step = kwargs.get('step')
     plate_type = kwargs.get('plate_type')
     dispense_file_sample = kwargs.get('FileNameSample')
@@ -86,8 +85,7 @@ def process_plate(workunit: ET.Element, process: str, **kwargs: Dict[str, Any]) 
     batch = create_batch(workunit, process, f'{barcode}-{step}', priority, iterations, minimumDelay, reference, start_condition)
     if barcode:
         main_barcode = barcode.split("_")[0]
-        create_variable(batch, 'String', 'Barcode_Test', main_barcode+'_Test')
-        create_variable(batch, 'String', 'Barcode_Control', main_barcode+'_Control')
+        create_variable(batch, 'String', 'Plate_Barcode', main_barcode)
         create_variable(batch, 'String', 'FileNameSample', dispense_file_sample)
         create_variable(batch, 'String', 'FileNameMedia', dispense_file_media)
     if plate_type:
@@ -96,7 +94,7 @@ def process_plate(workunit: ET.Element, process: str, **kwargs: Dict[str, Any]) 
 
 
 def write_file(workunit: ET.Element, process_name:str, **kwargs: Dict[str, Any]) -> ET.Element:
-    usable_kwargs = ['barcode', 'step', 'FileName', 'FileNameSample', 'FileNameMedia', 'FileContents', 'priority', 'iterations', 'minimumDelay']
+    usable_kwargs = ['Plate_Barcode', 'step', 'FileName', 'FileNameSample', 'FileNameMedia', 'FileContents', 'priority', 'iterations', 'minimumDelay']
     kwargs = {key: kwargs[key] for key in kwargs if key in usable_kwargs}
     # Using 'Induction' as the process name
     batch = process_plate(workunit, process_name, **kwargs)
@@ -132,7 +130,7 @@ def create(plate_data, plate_info, process_name, dispense_file_sample, dispense_
     batches = []
 
     kwargs = {
-        'barcode': barcode,
+        'Plate_Barcode': barcode,
         'plate_size': plate_size,
         'plate_type': plate_type,
         'FileNameSample': dispense_file_sample,
@@ -152,6 +150,6 @@ def create(plate_data, plate_info, process_name, dispense_file_sample, dispense_
         xml_path = f'{barcode}.xml'
         with open(os.path.join(MOMENTUM_ROOT_PATH, xml_path), "w") as f:
             f.write(xml_str)
-
+        print(f"XML file saved to: {os.path.join(MOMENTUM_ROOT_PATH, xml_path)}")
     except Exception as e:
         print(f"Error saving XML file: {e}")

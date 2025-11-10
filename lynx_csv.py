@@ -107,7 +107,7 @@ def create(plate_data, plate_info, process_name):
         writer = csv.writer(file)
         writer.writerows(lynx_data_media)
 
-    # print(f"Lynx Sample CSV file created: {output_filepath_sample}")
-    # print(f"Lynx Media CSV file created: {output_filepath_media}")
+    print(f"Lynx Sample CSV file created at: {output_filepath_sample}")
+    print(f"Lynx Media CSV file created at: {output_filepath_media}")
 
-    return output_filepath_sample, output_filepath_media
+    return output_filename_sample, output_filename_media
