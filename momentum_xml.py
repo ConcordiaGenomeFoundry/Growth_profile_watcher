@@ -65,11 +65,11 @@ def process_plate(workunit: ET.Element, process: str, **kwargs: Dict[str, Any]) 
     minimumDelay -- The minimum delay (str, default '0').
     ODTC_protocol -- The pathname for the ODTC process (str, optional).
     """
-    barcode = kwargs.get('Plate_Barcode')
+    barcode = kwargs.get('Barcode')
     step = kwargs.get('step')
     plate_type = kwargs.get('plate_type')
-    dispense_file_sample = kwargs.get('FileNameSample')
-    dispense_file_media = kwargs.get('FileNameMedia')
+    dispense_file_sample = kwargs.get('FileSample')
+    dispense_file_media = kwargs.get('FileMedia')
 
     priority = kwargs.get('priority', '10')
     iterations = kwargs.get('iterations', '1')
@@ -85,16 +85,16 @@ def process_plate(workunit: ET.Element, process: str, **kwargs: Dict[str, Any]) 
     batch = create_batch(workunit, process, f'{barcode}-{step}', priority, iterations, minimumDelay, reference, start_condition)
     if barcode:
         main_barcode = barcode.split("_")[0]
-        create_variable(batch, 'String', 'Plate_Barcode', main_barcode)
-        create_variable(batch, 'String', 'FileNameSample', dispense_file_sample)
-        create_variable(batch, 'String', 'FileNameMedia', dispense_file_media)
+        create_variable(batch, 'String', 'Barcode', main_barcode)
+        create_variable(batch, 'String', 'FileSample', dispense_file_sample)
+        create_variable(batch, 'String', 'FileMedia', dispense_file_media)
     if plate_type:
         create_variable(batch, 'String', 'Plate_Type', plate_type)
     return batch
 
 
 def write_file(workunit: ET.Element, process_name:str, **kwargs: Dict[str, Any]) -> ET.Element:
-    usable_kwargs = ['Plate_Barcode', 'step', 'FileName', 'FileNameSample', 'FileNameMedia', 'FileContents', 'priority', 'iterations', 'minimumDelay']
+    usable_kwargs = ['Barcode', 'step', 'FileName', 'FileSample', 'FileMedia', 'FileContents', 'priority', 'iterations', 'minimumDelay']
     kwargs = {key: kwargs[key] for key in kwargs if key in usable_kwargs}
     # Using 'Induction' as the process name
     batch = process_plate(workunit, process_name, **kwargs)
@@ -130,11 +130,11 @@ def create(plate_data, plate_info, process_name, dispense_file_sample, dispense_
     batches = []
 
     kwargs = {
-        'Plate_Barcode': barcode,
+        'Barcode': barcode,
         'plate_size': plate_size,
         'plate_type': plate_type,
-        'FileNameSample': dispense_file_sample,
-        'FileNameMedia': dispense_file_media,
+        'FileSample': dispense_file_sample,
+        'FileMedia': dispense_file_media,
     }
 
     for step, process in enumerate(protocol, start=1):
