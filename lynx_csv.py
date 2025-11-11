@@ -5,8 +5,8 @@ from datetime import datetime
 
 
 # Global path to save the Lynx CSV files
-LYNX_ROOT_PATH = PureWindowsPath('Y:\\MethodManager4\\Momentum_Input\\')
-# LYNX_ROOT_PATH = ('/Users/flavia/PycharmProjects/growth_profile_watcher/output/') # used for testing
+# LYNX_ROOT_PATH = PureWindowsPath('Y:\\MethodManager4\\Momentum_Input\\')
+LYNX_ROOT_PATH = ('/Users/flavia/PycharmProjects/growth_profile_watcher/output/') # used for testing
 
 
 def create(plate_data, plate_info, process_name):
@@ -21,15 +21,16 @@ def create(plate_data, plate_info, process_name):
     plate_id = plate_info[0]['plate_id']
     num_rows = plate_info[0]['num_rows']
     num_columns = plate_info[0]['num_columns']
+    num_wells = num_rows * num_columns
+    num_rows = 8
+    num_columns = 12
 
     main_plate_id = plate_id.split("_")[0]
 
     # Define output CSV file name
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename_sample = f"Sample_{main_plate_id}.csv"
-    # output_filename_sample = f"Sample_{main_plate_id}_{timestamp}.csv"
-    output_filename_media = f"Media_{main_plate_id}.csv"
-    # output_filename_media = f"Media_{main_plate_id}_{timestamp}.csv"
+    output_filename_sample = f"Sample_{main_plate_id}_{timestamp}.csv"
+    output_filename_media = f"Media_{main_plate_id}_{timestamp}.csv"
     output_filepath_sample = os.path.join(LYNX_ROOT_PATH, output_filename_sample)
     output_filepath_media = os.path.join(LYNX_ROOT_PATH, output_filename_media)
 
@@ -38,10 +39,10 @@ def create(plate_data, plate_info, process_name):
     wells_growth = last_entry['wells_growth']
 
     # Define parameters
-    target_od = 3 # max OD value ideally close to 3
-    target_volume = 25  # µL when OD is max value 1:100 of total volume 2500 µL
-    max_dispense_volume = 300  # µL maximum dispense volume
-    min_dispense_volume = 10  # µL minimum dispense volume
+    target_od = 3
+    target_volume = 25
+    max_dispense_volume = 300
+    min_dispense_volume = 10
 
     # Lists to hold calculated volumes
     dispense_volumes_sample = []
@@ -51,24 +52,15 @@ def create(plate_data, plate_info, process_name):
         try:
             od_value = float(od)
             if od_value == 0:
-                # Handle zero OD: assign max sample volume (300µL) and 0µL media
                 sample_volume = max_dispense_volume
             else:
-                # Calculate sample dispense volume based on OD
                 sample_volume = (target_volume / od_value) * target_od
-                # Ensure the sample volume is within the allowed range
                 sample_volume = max(min(sample_volume, max_dispense_volume), min_dispense_volume)
 
-            # Calculate media dispense volume to top up to 300µL total
-            # The second file is based on the first:
-            # Total Volume (300µL) = Sample Volume + Media Volume
             media_volume = max_dispense_volume - sample_volume
-
-            # Store calculated volumes
             dispense_volumes_sample.append(sample_volume)
             dispense_volumes_media.append(media_volume)
         except ValueError:
-            # Handle invalid OD values (e.g., empty strings): Max sample, 0 media
             dispense_volumes_sample.append(max_dispense_volume)
             dispense_volumes_media.append(0.0)
 
@@ -76,33 +68,41 @@ def create(plate_data, plate_info, process_name):
     header = [f"VI;{num_columns};{num_rows}"] + [str(i) for i in range(1, num_columns + 1)]
     lynx_data_sample = [header]
 
-    # Add rows for each plate row (A, B, C, ...)
     for row_index in range(num_rows):
-        row_label = chr(65 + row_index)  # Convert to A, B, C, etc.
-        row_data = [row_label] + [
-            f"{dispense_volumes_sample[row_index * num_columns + col]:.2f}"
-            for col in range(num_columns)
-        ]
+        row_label = chr(65 + row_index)
+        row_data = [row_label]
+        for col in range(num_columns):
+            if num_wells == 96 or (row_index % 2 == 0 and col % 2 == 0):  # Adjust for 24-well plate
+                if num_wells == 96:
+                    sample_volume = dispense_volumes_sample[row_index * num_columns + col]
+                else:  # 24-well plate
+                    sample_volume = dispense_volumes_sample[(row_index // 2) * (num_columns // 2) + (col // 2)]
+            else:
+                sample_volume = 0.0
+            row_data.append(f"{sample_volume:.2f}")
         lynx_data_sample.append(row_data)
 
-    # Write to Lynx Sample CSV file
     with open(output_filepath_sample, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(lynx_data_sample)
 
     # --- Prepare and Write Media Dispense CSV ---
-    lynx_data_media = [header]  # Use the same header for the media file
+    lynx_data_media = [header]
 
-    # Add rows for each plate row (A, B, C, ...)
     for row_index in range(num_rows):
-        row_label = chr(65 + row_index)  # Convert to A, B, C, etc.
-        row_data = [row_label] + [
-            f"{dispense_volumes_media[row_index * num_columns + col]:.2f}"
-            for col in range(num_columns)
-        ]
+        row_label = chr(65 + row_index)
+        row_data = [row_label]
+        for col in range(num_columns):
+            if num_wells == 96 or (row_index % 2 == 0 and col % 2 == 0):
+                if num_wells == 96:
+                    media_volume = dispense_volumes_media[row_index * num_columns + col]
+                else: # 24-well plate
+                    media_volume = dispense_volumes_media[(row_index // 2) * (num_columns // 2) + (col // 2)]
+            else:
+                media_volume = 0.0
+            row_data.append(f"{media_volume:.2f}")
         lynx_data_media.append(row_data)
 
-    # Write to Lynx Media CSV file
     with open(output_filepath_media, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(lynx_data_media)

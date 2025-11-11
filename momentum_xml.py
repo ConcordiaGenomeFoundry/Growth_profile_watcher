@@ -4,8 +4,8 @@ import datetime, os
 from pathlib import PureWindowsPath
 
 # Global path to save the XML files
-MOMENTUM_ROOT_PATH = PureWindowsPath('C:\\WorklistWatcher\\')
-# MOMENTUM_ROOT_PATH = ('/Users/flavia/PycharmProjects/growth_profile_watcher/output/') #used for testing
+# MOMENTUM_ROOT_PATH = PureWindowsPath('C:\\WorklistWatcher\\')
+MOMENTUM_ROOT_PATH = ('/Users/flavia/PycharmProjects/growth_profile_watcher/output/') #used for testing
 
 
 def initialize_workunit(worklist, name, append, auto_load, auto_verify_load, auto_unload, auto_verify_unload):
