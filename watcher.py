@@ -22,16 +22,16 @@ def extract_csv_plate_info_growth(csv_path):
         rows = list(reader)
 
         # Extract plate type (line 5, column 2)
-        plate_type = rows[4][1]  # Line 5 is index 4 (0-based indexing)
+        plate_type = rows[3][1]  # Line 5 is index 4 (0-based indexing)
 
         # Extract number of columns in the plate (line 6, column 2)
-        num_columns = int(rows[5][1])  # Line 6 is index 5 (0-based indexing)
+        num_columns = int(rows[4][1])  # Line 6 is index 5 (0-based indexing)
 
         # Extract number of rows in the plate (line 7, column 2)
-        num_rows = int(rows[6][1])  # Line 7 is index 6
+        num_rows = int(rows[5][1])  # Line 7 is index 6
 
         # Extract plate id (line 10, column 2)
-        plate_id = rows[9][1]  # Line 10 is index 9
+        plate_id = rows[8][1]  # Line 10 is index 9
 
         # Create a list to hold plate information
         plate_info = []

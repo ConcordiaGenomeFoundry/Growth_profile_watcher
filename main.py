@@ -3,7 +3,15 @@ import sys
 import watcher
 import argparse
 from pathlib import Path
-DEBUG = True
+import logging
+
+# Configure logging
+LOG_FILE = 'application.log'
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
 def main():
@@ -34,6 +42,7 @@ def main():
         return 2
 
     # target_path = ("/Users/flavia/PycharmProjects/growth_profile_watcher/sample/GP_20171118_012019_OD.csv")
+    # /Users/flavia/PycharmProjects/growth_profile_watcher/sample/GP_20251114_181610_MTP01_OD_HTS80001_Test.csv
     print(f"\n[GP Watcher] Watching: {target_path}")
     watcher.start_watching(target_path, process_arg)
 
