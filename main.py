@@ -3,32 +3,20 @@ import sys
 import watcher
 import argparse
 from pathlib import Path
-import logging
-
-# Configure logging
-LOG_FILE = 'application.log'
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
 
 
 def main():
+    # Argument parsing from Momentum call
     parser = argparse.ArgumentParser(description="Watch a file and run a command when it changes.")
-    parser.add_argument("path", nargs="?", help="Enter path to the CSV file to watch (e.g., ./GP_20250930_111331_OD.csv)")
-    # parser.add_argument("--cmd", help="Command to execute when the file changes")
-    parser.add_argument("--process", help="Momentum Process to call when the threshold is met")
+    parser.add_argument("target_OD", help="Target OD value for saturation (e.g., 3)")
+    parser.add_argument("wells_threshold", help="Threshold percentage of wells (e.g., 70 for 70%)")
+    parser.add_argument("process_arg", help="Momentum process to call when the threshold is met")
     args = parser.parse_args()
 
-    path_arg = args.path or input(" --- Enter path to the CSV file to watch (e.g., C://GP_20250930_111331_OD.csv): ").strip()
+    # Request path interactively
+    path_arg = input(" --- Enter path to the CSV file to watch (e.g., C://GP_20250930_111331_OD.csv): ").strip()
     if not path_arg:
         print("\n[GP Watcher] Error: no file path provided", file=sys.stderr)
-        return 2
-
-    process_arg = args.process or input(" --- Enter the momentum process to call when the threshold is met: ").strip()
-    if not process_arg:
-        print("\n[GP Watcher] Error: no process name provided", file=sys.stderr)
         return 2
 
     target_path = Path(os.path.expanduser(path_arg))
@@ -41,10 +29,15 @@ def main():
         print(f"\n[GP Watcher] Error: directory does not exist: {parent_dir}", file=sys.stderr)
         return 2
 
-    # target_path = ("/Users/flavia/PycharmProjects/growth_profile_watcher/sample/GP_20171118_012019_OD.csv")
-    # /Users/flavia/PycharmProjects/growth_profile_watcher/sample/GP_20251114_181610_MTP01_OD_HTS80001_Test.csv
+
+    # target_path = ("/Users/flavia/PycharmProjects/growth_profile_watcher/sample/GP_20171118_012019_OD_24.csv")
     print(f"\n[GP Watcher] Watching: {target_path}")
-    watcher.start_watching(target_path, process_arg)
+    watcher.start_watching(
+        target_path,
+        args.process_arg,
+        args.target_OD,
+        args.wells_threshold
+    )
 
 
 if __name__ == "__main__":
