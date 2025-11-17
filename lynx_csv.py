@@ -5,8 +5,8 @@ from datetime import datetime
 
 
 # Global path to save the Lynx CSV files
-# LYNX_ROOT_PATH = PureWindowsPath('Y:\\MethodManager4\\Momentum_Input\\')
-LYNX_ROOT_PATH = ('/Users/flavia/PycharmProjects/growth_profile_watcher/output/') # used for testing
+LYNX_ROOT_PATH = PureWindowsPath('Y:\\MethodManager4\\Momentum_Input\\')
+# LYNX_ROOT_PATH = ('/Users/flavia/PycharmProjects/growth_profile_watcher/output/') # used for testing
 
 
 def create(plate_data, plate_info, target_OD):
