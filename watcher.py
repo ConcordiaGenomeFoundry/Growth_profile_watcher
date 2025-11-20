@@ -116,12 +116,21 @@ class NewFileHandler(FileSystemEventHandler):
     """
     Custom event handler for watchdog to detect file creation events.
     """
-    def __init__(self, watched_file, process_name, target_OD, wells_threshold):
+    def __init__(self, watched_file, process_name, target_OD, wells_threshold, min_delay=60):
         super().__init__()
         self.watched_file = watched_file
         self.process_name = process_name
         self.target_OD = int(target_OD)
         self.threshold = int(wells_threshold) / 100.0  # Convert percentage to decimal
+        self.last_processed = 0
+        self.min_delay = min_delay  # seconds
+
+    def should_process(self):
+        now = time.time()
+        if now - self.last_processed >= self.min_delay:
+            self.last_processed = now
+            return True
+        return False
 
     def on_created(self, event):
         """
@@ -133,7 +142,8 @@ class NewFileHandler(FileSystemEventHandler):
         if not event.is_directory and event_file_normalized == watched_file_normalized:  # Ensure it's the specific file
             file_extension = os.path.splitext(self.watched_file)[1].lower()
             if FILE_EXTENSIONS is None or file_extension in [ext.lower() for ext in FILE_EXTENSIONS]:
-                process_csv_file(event.src_path, self.process_name, self.target_OD, self.threshold)
+                if self.should_process():
+                    process_csv_file(event.src_path, self.process_name, self.target_OD, self.threshold)
 
     def on_modified(self, event):
         """
@@ -143,7 +153,8 @@ class NewFileHandler(FileSystemEventHandler):
         event_file_normalized = os.path.abspath(event.src_path)
 
         if not event.is_directory and event_file_normalized == watched_file_normalized:
-            process_csv_file(event.src_path, self.process_name, self.target_OD, self.threshold)
+            if self.should_process():
+                process_csv_file(event.src_path, self.process_name, self.target_OD, self.threshold)
 
 
 # --- Main Script Execution ---

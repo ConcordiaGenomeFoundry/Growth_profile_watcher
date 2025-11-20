@@ -29,7 +29,6 @@ def main():
         print(f"\n[GP Watcher] Error: directory does not exist: {parent_dir}", file=sys.stderr)
         return 2
 
-
     # target_path = ("/Users/flavia/PycharmProjects/growth_profile_watcher/sample/GP_20171118_012019_OD_24.csv")
     print(f"\n[GP Watcher] Watching: {target_path}")
     watcher.start_watching(
