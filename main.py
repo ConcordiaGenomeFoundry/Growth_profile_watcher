@@ -10,6 +10,7 @@ def main():
     parser = argparse.ArgumentParser(description="Watch a file and run a command when it changes.")
     parser.add_argument("target_OD", help="Target OD value for saturation (e.g., 3)")
     parser.add_argument("wells_threshold", help="Threshold percentage of wells (e.g., 70 for 70%)")
+    parser.add_argument("target_volume", help="Target volume to dispense (e.g., 125)")
     parser.add_argument("process_arg", help="Momentum process to call when the threshold is met")
     args = parser.parse_args()
 
@@ -35,7 +36,8 @@ def main():
         target_path,
         args.process_arg,
         args.target_OD,
-        args.wells_threshold
+        args.wells_threshold,
+        args.target_volume
     )
 
 

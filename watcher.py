@@ -79,7 +79,7 @@ def verify_growth_last_row(plate_info, plate_data, target_OD, threshold):
 
 
 # --- File Processing Logic ---
-def process_csv_file(file_path, process_name, target_OD, threshold):
+def process_csv_file(file_path, process_name, target_OD, target_volume, threshold):
     """
     Process the newly modified file.
     :param file_path: Path to the modified file.
@@ -98,7 +98,7 @@ def process_csv_file(file_path, process_name, target_OD, threshold):
             '''Create a worklist for Momentum XML'''
 
             print(f"\n--- Create CSV Dispense list for Lynx ---")
-            dispense_filename_sample, dispense_filename_media = lynx_csv.create(plate_data, plate_info, target_OD)
+            dispense_filename_sample, dispense_filename_media = lynx_csv.create(plate_data, plate_info, target_OD, target_volume)
 
             print(f"\n--- Create XML worklist for Momentum ---")
             momentum_xml.create(plate_data, plate_info, process_name, dispense_filename_sample, dispense_filename_media)
@@ -116,11 +116,12 @@ class NewFileHandler(FileSystemEventHandler):
     """
     Custom event handler for watchdog to detect file creation events.
     """
-    def __init__(self, watched_file, process_name, target_OD, wells_threshold, min_delay=60):
+    def __init__(self, watched_file, process_name, target_OD, wells_threshold, target_volume, min_delay=60):
         super().__init__()
         self.watched_file = watched_file
         self.process_name = process_name
         self.target_OD = int(target_OD)
+        self.target_volume = int(target_volume)
         self.threshold = int(wells_threshold) / 100.0  # Convert percentage to decimal
         self.last_processed = 0
         self.min_delay = min_delay  # seconds
@@ -143,7 +144,7 @@ class NewFileHandler(FileSystemEventHandler):
             file_extension = os.path.splitext(self.watched_file)[1].lower()
             if FILE_EXTENSIONS is None or file_extension in [ext.lower() for ext in FILE_EXTENSIONS]:
                 if self.should_process():
-                    process_csv_file(event.src_path, self.process_name, self.target_OD, self.threshold)
+                    process_csv_file(event.src_path, self.process_name, self.target_OD, self.target_volume, self.threshold)
 
     def on_modified(self, event):
         """
@@ -154,11 +155,11 @@ class NewFileHandler(FileSystemEventHandler):
 
         if not event.is_directory and event_file_normalized == watched_file_normalized:
             if self.should_process():
-                process_csv_file(event.src_path, self.process_name, self.target_OD, self.threshold)
+                process_csv_file(event.src_path, self.process_name, self.target_OD, self.target_volume, self.threshold)
 
 
 # --- Main Script Execution ---
-def start_watching(watched_file, process_name, target_OD, wells_threshold):
+def start_watching(watched_file, process_name, target_OD, wells_threshold, target_volume):
     """
     Start watching the specified folder for new files.
     :param watched_file: The watch file is pass by the user in the main function.
@@ -167,7 +168,7 @@ def start_watching(watched_file, process_name, target_OD, wells_threshold):
     # Extract the parent directory of the file
     parent_dir = os.path.dirname(watched_file)
 
-    event_handler = NewFileHandler(watched_file, process_name, target_OD, wells_threshold)
+    event_handler = NewFileHandler(watched_file, process_name, target_OD, wells_threshold, target_volume)
     observer = Observer()
     observer.schedule(event_handler, parent_dir, recursive=False) # Set recursive=True to watch subdirectories
 

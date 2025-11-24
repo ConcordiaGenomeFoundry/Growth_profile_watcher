@@ -9,7 +9,7 @@ LYNX_ROOT_PATH = PureWindowsPath('Y:\\MethodManager4\\Momentum_Input\\')
 # LYNX_ROOT_PATH = ('/Users/flavia/PycharmProjects/growth_profile_watcher/output/') # used for testing
 
 
-def create(plate_data, plate_info, target_OD):
+def create(plate_data, plate_info, target_OD, target_volume):
     """
     Create a Lynx CSV file to dispense volumes based on normalized OD values.
     :param plate_data: List of dictionaries containing plate growth data.
@@ -38,10 +38,10 @@ def create(plate_data, plate_info, target_OD):
     wells_growth = last_entry['wells_growth']
 
     # Define parameters
-    # target_od = 3
-    target_volume = 25
-    max_dispense_volume = 300
-    min_dispense_volume = 10
+    # target_od = 3 # add as function parameter
+    # target_volume = 125 # add as function parameter
+    max_dispense_volume = 300 # in µL
+    min_dispense_volume = 10 # in µL
 
     # Lists to hold calculated volumes
     dispense_volumes_sample = []
