@@ -26,17 +26,29 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install --upgrade pip
-        pip install pyinstaller # Install PyInstaller
-        pip install -r requirements.txt # Install your project's dependencies
+        pip install pyinstaller
+        pip install -r requirements.txt
 
     - name: 🔨 Package Application with PyInstaller
       run: pyinstaller --onefile --name watch_growth --icon growth_profile.ico main.py
 
-    - name: ⬆️ Upload Executable as Artifact
+    - name: 📦 Prepare Release Assets
+      run: |
+        # Create a clean folder to store final release items
+        mkdir release_assets
+        
+        # Copy the exe into the release folder
+        cp dist/watch_growth.exe release_assets/
+        
+        # Zip only the data folder contents and name it database.zip
+        compress-archive -path data/* -destinationpath release_assets/database.zip
+      shell: powershell
+
+    - name: ⬆️ Upload Assets as Workflow Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Windows-EXE
-        path: dist/watch_growth.exe # The path where PyInstaller puts the EXE
+        name: Windows-Release-Assets
+        path: release_assets/
 
   # 2. Job to create the GitHub Release
   create_release:
@@ -45,16 +57,17 @@ jobs:
     runs-on: ubuntu-latest # Can use a cheaper Linux runner for the upload/release
 
     steps:
-      - name: ⬇️ Download Windows EXE Artifact
+      - name: ⬇️ Download Release Assets
         uses: actions/download-artifact@v4
         with:
-          name: Windows-EXE
-          path: ./release_assets/ # Downloads the .exe into this temporary folder
+          name: Windows-Release-Assets
+          path: ./release_upload/
 
       - name: 🏷️ Create and Upload Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') # Only runs if triggered by a tag push
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ./release_assets/watch_growth.exe # Path to the downloaded EXE
+          files: |
+            ./release_upload/watch_growth.exe
+            ./release_upload/database.zip
           prerelease: false
-          # The tag name is automatically used for the release

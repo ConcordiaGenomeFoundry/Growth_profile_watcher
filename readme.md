@@ -3,7 +3,7 @@
 ## Overview
 The **Growth Profile Watcher** is a background tool designed to monitor a `.csv` file defined by the user. 
 It analyzes OD data from Enzyscreen from a `.csv` file and generates an XML file for the Momentum Thermo Scientific 
-system and a `.csv` Dispense list to be used on Lynx. These files are created when a specified growth criterion is met.
+system and a `.csv` Dispense list to be used on Lynx Liquid Dispense. These files are created when a specified growth criterion is met.
 
 ## Features
 - Monitors the `.csv` files in real-time.
@@ -26,9 +26,10 @@ idle and start to initiate the instrument.
 ### 1. Enzyscreen Setup and Plate Loading in Momentum
 - **Start Enzyscreen**: Navigate to the Enzyscreen software and ensure the GP960 Control software is started (shaking) or set to pause.
 - **Momentum Inventory**: Add all plates for the experiment—both dummy and normal Enzyscreen plates—to the Momentum Inventory.
-  - Crucially: Every plate must have an associated barcode and adapters on Enzyscreen need to be checked before load plates.
+  - Crucially: Every plate must have an associated barcode and adapters for Enzyscreen plate format must be checked before load plates.
 - **Load Plates**: Place the prepared plate(s) at Hotel on the Momentum system.
 - **Initiate Loading**: Call a Momentum process to load the plate(s) onto the Enzyscreen instrument.
+The full Momentum process is shared on Momentum folder (e.g. Momentum/GP Enzyscreen full process.mbm). 
 
 ### 2. Post-Acquisition Data Processing
 - **First Acquisition**: Once the Enzyscreen completes its first measurement acquisition, the instrument will momentarily stop and then resume shaking.
